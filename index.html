@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="Think-Then-React: Towards Better Action-to-Reaction Motion Generation">
+  <title>Think-Then-React: Towards Better Action-to-Reaction Motion Generation</title>
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PYVRSFMDRL"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+
+    gtag('js', new Date());
+
+    gtag('config', 'G-PYVRSFMDRL');
+  </script>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+
+  <script>
+
+    const symmetricalCases = {
+      'G002T000A000R002': "Two people stand facing each other. One person approaches and opens her/his arms to <span class=\"action-highlight\">embrace</span> the other person's back and waist, while the other person <span class=\"reaction-highlight\">imitates</span> the same action",
+      'G002T006A031R007': 'The first person stands in front of the second person and gives him a <span class=\"action-highlight\">thumbs up</span> with her/his right hand, and the second person <span class=\"reaction-highlight\">raises her/his hands</span> as well',
+      'G056T007A039R020': 'Two people stand facing each other, one person <span class=\"action-highlight\">blows a kiss</span> to the other with both hands, and the other person then <span class=\"reaction-highlight\">receives it with both hands</span>', 
+      'G003T000A002R011': 'Two people stand facing each other, extending their right hands and <span class=\"action-highlight\">waving</span>. The first person raises her/his right hand above her/his head, while the second person <span class=\"reaction-highlight\">keeps her/his right hand beside her/his head</span>', 
+      'G057T000A002R012': 'The first person <span class=\"action-highlight\">raises her/his left hand and waves</span>, while the other person also <span class=\"reaction-highlight\">raises her/his left hand and waves</span>'
+    };
+
+    const symmetricalCasesBaselines = {
+      'G002T000A000R002': 'ReGenNet',
+      'G002T006A031R007': 'MotionGPT',
+      'G056T007A039R020': 'ReGenNet',
+      'G003T000A002R011': 'MotionGPT',
+      'G057T000A002R012': 'ReGenNet',
+    };
+
+    const asymmetricalCases = {
+      "G001T001A005R002": "The first person takes a few steps forward and <span class=\"action-highlight\">kicks the right calf of the second person</span>, the second person <span class=\"reaction-highlight\">leans forward</span>",
+      "G001T001A007R011": "The first person <span class=\"action-highlight\">pushes</span> the second person heavily on the back with both hands, causing her/him to <span class=\"reaction-highlight\">be pushed forward several steps</span>",
+      "G002T004A024R022": "Two people stand facing each other. The first person <span class=\"action-highlight\">leans</span> towards the second person, and then the second person <span class=\"reaction-highlight\">taps</span> her/him",
+      "G057T003A019R029": "The first person raises her/his hands to <span class=\"action-highlight\">support</span> the other person's arm, and the other person <span class=\"reaction-highlight\">moves forward</span>",
+      "G003T000A004R021": "The first person faces the second person at first and <span class=\"action-highlight\">hits</span> her/him hard with her/his right hand, the other person <span class=\"reaction-highlight\">is pushed back</span>",
+      "G003T002A014R023": "The first person runs towards the other and <span class=\"action-highlight\">knocks</span> her/his left shoulder against the right shoulder, and the second person is <span class=\"reaction-highlight\">forced to step back</span>", 
+      "G003T001A005R000": "Two people stand face to face. One person approaches and lifts her/his right leg to <span class=\"action-highlight\">kick</span> the other person's left calf, and the second person <span class=\"reaction-highlight\">takes several steps</span>",
+    };
+
+    const asymmetricalCasesBaselines = {
+      'G001T001A005R002': 'ReGenNet',
+      'G001T001A007R011': 'MotionGPT',
+      'G002T004A024R022': 'ReGenNet',
+      'G057T003A019R029': 'MotionGPT',
+      'G003T000A004R021': 'ReGenNet',
+      'G003T002A014R023': 'MotionGPT',
+      'G003T001A005R000': 'ReGenNet',
+    };
+
+    const failureCases = {
+      'G001T004A021R006': 'GT prompt: One person <span class=\"action-highlight\">raises her/his hands and shakes</span> them near her/his head with larger movements, and the other person <span class=\"reaction-highlight\">imitates</span> by raising her/his hands and shaking them near her/his head with larger movements.<br>TTR thinking result: Two people stand side by side, facing each other, with their hands <span class=\"failure-highlight\">raised high</span> above their heads', 
+      'G001T006A030R001': 'GT prompt: Two people stand facing each other, and the first person extends her/his left hand to <span class=\"action-highlight\">pat</span> the right cheek of the second person.<br>TTR thinking result: Two people stand facing each other. One person stretches out his left hand and <span class=\"failure-highlight\">pushes</span> the second person, who <span class=\"failure-highlight\">leans back</span>', 
+      'G001T006A030R004': "GT prompt: Two people stand facing each other, with the first person extending both hands to gently <span class=\"action-highlight\">pat the other person's cheeks</span>.<br>TTR thinking result: The first person is <span class=\"failure-highlight\"></span>raising her/his hands, and the second person mimics to <span class=\"failure-highlight\">give her/him a double high-five</span>", 
+      'G003T000A000R004': "GT prompt: The first person sits on a chair while the second person stands in front of him. The first person's hands are <span class=\"action-highlight\">wrapped around the shoulders</span> of the second person, who in turn <span class=\"reaction-highlight\">embraces</span> the waist of the first person.<br>TTR thinking result: The first person grabs the other person's waist, the second person <span class=\"failure-highlight\">wrestles with the first person</span>", 
+      'G057T000A000R000': "GT prompt: The first person walks forward and raises both hands, <span class=\"action-highlight\">wrapping her/his arms around the second person's shoulders</span>. The second person <span class=\"reaction-highlight\">raises their hands and embraces</span> the first person's waist.<br>TTR thinking result: One person walks up to the other person and gives the second person a <span class=\"failure-highlight\">shoulder massage</span>, and the second person <span class=\"failure-highlight\">leans back</span>",
+    };
+
+    function getInnerHTML (name, description, isBaseline=false) {
+      let parentDir = isBaseline ? '/baselines' : ''
+      return `
+        <video poster="" autoplay controls muted loop playsinline height="100%">
+            <source src="./static/videos${parentDir}/${name}_pred.mkv" type="video/mp4">
+        </video>
+        <div>
+            <p class="subtitle is-6 has-text-centered description">${description}</p>
+        </div>
+      `
+    };
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const symmetrical = document.getElementById("symmetrical-cases").querySelector("#results-carousel");
+      for (const [name, description] of Object.entries(symmetricalCases)) {
+        const item = document.createElement("div");
+        item.className = "item";
+        item.innerHTML = getInnerHTML(name, description)
+        symmetrical.appendChild(item);
+      }
+
+      const symmetricalBaselines = document.getElementById("symmetrical-cases-baselines").querySelector("#results-carousel");
+      for (const [name, description] of Object.entries(symmetricalCasesBaselines)) {
+        const item = document.createElement("div");
+        item.className = "item";
+        item.innerHTML = getInnerHTML(name, description, isBaseline=true)
+        symmetricalBaselines.appendChild(item);
+      }
+
+      const asymmetrical = document.getElementById("asymmetrical-cases").querySelector("#results-carousel");
+      for (const [name, description] of Object.entries(asymmetricalCases)) {
+        const item = document.createElement("div");
+        item.className = "item";
+        item.innerHTML = getInnerHTML(name, description)
+        asymmetrical.appendChild(item);
+      }
+
+      const asymmetricalBaselines = document.getElementById("asymmetrical-cases-baselines").querySelector("#results-carousel");
+      for (const [name, description] of Object.entries(asymmetricalCasesBaselines)) {
+        const item = document.createElement("div");
+        item.className = "item";
+        item.innerHTML = getInnerHTML(name, description, isBaseline=true)
+        asymmetricalBaselines.appendChild(item);
+      }
+
+      const failure = document.getElementById("failure-cases").querySelector("#results-carousel");
+      for (const [name, description] of Object.entries(failureCases)) {
+        const item = document.createElement("div");
+        item.className = "item";
+        item.innerHTML = getInnerHTML(name, description)
+        failure.appendChild(item);
+      }
+    });
+
+  </script>
+
+
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title">Think-Then-React: Towards Better Action-to-Reaction Motion Generation</h1>
+          <h4 class="title is-4 publication-title">Anonymous ICLR2025 submission</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="hero teaser">
+  <div class="container is-max-desktop">
+    <div class="hero-body">
+      <img src="./static/images/teaser.png">
+      <h2 class="subtitle has-text-centered">
+        <p>
+          Given a human action as input, our model Think-Then-React (TTR) first <b>thinks</b> by generating an action description and reasoning about a reaction prompt.  It then <b>reacts</b> to the input based on the results of this thinking process.  TTR reacts in a real-time manner (at every timestep) and periodically re-thinks at specific interval (every 2 timesteps in this illustration) to mitigate accumulated errors.
+        </p>
+      </h2>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Modeling human-like action-to-reaction generation has significant real-world applications, like human-robot interaction and games. Despite recent advancements in single-person motion generation, it is still challenging to well handle action-to-reaction generation, due to the difficulty of directly predicting reaction from action sequence without prompts, and the absence of a unified representation that effectively encodes multi-person motion.  To address these challenges, we introduce Think-Then-React (TTR), a large language model-based framework designed to generate human-like reactions. First, with our fine-grained multimodal training strategy, TTR is capable to unify two processes during inference: a <b>thinking</b> process that explicitly infers action intentions and reasons corresponding reaction description, which serve as semantic prompts, and a <b>reacting</b> process that predicts reactions based on input action and the inferred semantic prompts.  Second, to effectively represent multi-person motion in language models, we propose a unified motion tokenizer by decoupling egocentric pose and absolute space features, which effectively represents action and reaction motion with same encoding.  Extensive experiments demonstrate that TTR outperforms existing baselines, achieving significant improvements in evaluation metrics, such as reducing FID from 3.988 to <b>1.942</b>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Overall method</h2>
+        <img src="./static/images/detail.v3.png">
+        <div class="content has-text-justified">
+          <p>
+            (a) We propose a unified tokenizing process that encodes human action and reaction while maintaining absolute space feature and egocentric motion feature. (b) To obtain space tokens of a motion, we first extract its initial space state, i.e., 2D position and body orientation. Then we normalize the body center at the origin while facing positive z axis for effectively encoding the following pose sequences. (c) During inference, our method TTR first infers action's intent and semantics. Then TTR could predict corresponding reaction based on both the input action and inferred intent.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <h2 class="title is-2 has-text-centered"><span class="action-highlight">Action</span>-to-<span class="reaction-highlight">Reaction</span> Cases</h2>
+        
+        <h4 class="title is-4">We visualize samples from Inter-X test set with Blender. The avatar in blue is <span class="action-highlight">ground-truth action</span> and avatar in green is our <span class="reaction-highlight">predicted reaction</span>. Slight jitter might be observed due to unstable IK process. Hands motions are not included.</h4>
+
+        <div id="asymmetrical-cases">
+          <h3 class="title is-3">Asymmetrical Cases</h3>
+          <section class="hero">
+            <div class="hero-body">
+              <div class="container">
+                <div id="results-carousel" class="carousel results-carousel"></div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div id="asymmetrical-cases-baselines">
+          <h5 class="title is-5">Asymmetrical Cases (Baselines)</h5>
+          <section class="hero">
+            <div class="hero-body">
+              <div class="container">
+                <div id="results-carousel" class="carousel results-carousel"></div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div id="symmetrical-cases">
+          <h3 class="title is-3">Symmetrical Cases</h3>
+          <section class="hero">
+            <div class="hero-body">
+              <div class="container">
+                <div id="results-carousel" class="carousel results-carousel"></div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div id="symmetrical-cases-baselines">
+          <h5 class="title is-5">Symmetrical Cases (Baselines)</h5>
+          <section class="hero">
+            <div class="hero-body">
+              <div class="container">
+                <div id="results-carousel" class="carousel results-carousel"></div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div id="failure-cases">
+          <h3 class="title is-3">Failure Cases</h3>
+          <section class="hero">
+            <div class="hero-body">
+              <div class="container">
+                <div id="results-carousel" class="carousel results-carousel"></div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+      </div>
+    </div>
+
+    <div>*Thanks to <a href="nerfies.github.io">nerfies</a> for their webpage template.</div>
+
+  </div>
+</section>
+
+
+</body>
+</html>
