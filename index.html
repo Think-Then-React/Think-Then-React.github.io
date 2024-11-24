@@ -44,7 +44,10 @@
       'G002T006A031R007': 'The first person stands in front of the second person and gives him a <span class=\"action-highlight\">thumbs up</span> with her/his right hand, and the second person <span class=\"reaction-highlight\">raises her/his hands</span> as well',
       'G056T007A039R020': 'Two people stand facing each other, one person <span class=\"action-highlight\">blows a kiss</span> to the other with both hands, and the other person then <span class=\"reaction-highlight\">receives it with both hands</span>', 
       'G003T000A002R011': 'Two people stand facing each other, extending their right hands and <span class=\"action-highlight\">waving</span>. The first person raises her/his right hand above her/his head, while the second person <span class=\"reaction-highlight\">keeps her/his right hand beside her/his head</span>', 
-      'G057T000A002R012': 'The first person <span class=\"action-highlight\">raises her/his left hand and waves</span>, while the other person also <span class=\"reaction-highlight\">raises her/his left hand and waves</span>'
+      'G057T000A002R012': 'The first person <span class=\"action-highlight\">raises her/his left hand and waves</span>, while the other person also <span class=\"reaction-highlight\">raises her/his left hand and waves</span>',
+
+      "G057T003A019R029": "The first person raises her/his hands to <span class=\"action-highlight\">support</span> the other person's arm, and the other person <span class=\"reaction-highlight\">moves forward</span>",
+      "G003T000A004R021": "The first person faces the second person at first and <span class=\"action-highlight\">hits</span> her/him hard with her/his right hand, the other person <span class=\"reaction-highlight\">is pushed back</span>",
     };
 
     const symmetricalCasesBaselines = {
@@ -58,21 +61,19 @@
     const asymmetricalCases = {
       "G001T001A005R002": "The first person takes a few steps forward and <span class=\"action-highlight\">kicks the right calf of the second person</span>, the second person <span class=\"reaction-highlight\">leans forward</span>",
       "G001T001A007R011": "The first person <span class=\"action-highlight\">pushes</span> the second person heavily on the back with both hands, causing her/him to <span class=\"reaction-highlight\">be pushed forward several steps</span>",
-      "G002T004A024R022": "Two people stand facing each other. The first person <span class=\"action-highlight\">leans</span> towards the second person, and then the second person <span class=\"reaction-highlight\">taps</span> her/him",
+      "G003T001A005R000": "Two people stand face to face. One person approaches and lifts her/his right leg to <span class=\"action-highlight\">kick</span> the other person's left calf, and the second person <span class=\"reaction-highlight\">takes several steps</span>",
       "G057T003A019R029": "The first person raises her/his hands to <span class=\"action-highlight\">support</span> the other person's arm, and the other person <span class=\"reaction-highlight\">moves forward</span>",
       "G003T000A004R021": "The first person faces the second person at first and <span class=\"action-highlight\">hits</span> her/him hard with her/his right hand, the other person <span class=\"reaction-highlight\">is pushed back</span>",
       "G003T002A014R023": "The first person runs towards the other and <span class=\"action-highlight\">knocks</span> her/his left shoulder against the right shoulder, and the second person is <span class=\"reaction-highlight\">forced to step back</span>", 
-      "G003T001A005R000": "Two people stand face to face. One person approaches and lifts her/his right leg to <span class=\"action-highlight\">kick</span> the other person's left calf, and the second person <span class=\"reaction-highlight\">takes several steps</span>",
     };
 
     const asymmetricalCasesBaselines = {
       'G001T001A005R002': 'ReGenNet',
       'G001T001A007R011': 'MotionGPT',
-      'G002T004A024R022': 'ReGenNet',
+      'G003T001A005R000': 'ReGenNet',
       'G057T003A019R029': 'MotionGPT',
       'G003T000A004R021': 'ReGenNet',
       'G003T002A014R023': 'MotionGPT',
-      'G003T001A005R000': 'ReGenNet',
     };
 
     const failureCases = {
@@ -81,13 +82,15 @@
       'G001T006A030R004': "GT prompt: Two people stand facing each other, with the first person extending both hands to gently <span class=\"action-highlight\">pat the other person's cheeks</span>.<br>TTR thinking result: The first person is <span class=\"failure-highlight\"></span>raising her/his hands, and the second person mimics to <span class=\"failure-highlight\">give her/him a double high-five</span>", 
       'G003T000A000R004': "GT prompt: The first person sits on a chair while the second person stands in front of him. The first person's hands are <span class=\"action-highlight\">wrapped around the shoulders</span> of the second person, who in turn <span class=\"reaction-highlight\">embraces</span> the waist of the first person.<br>TTR thinking result: The first person grabs the other person's waist, the second person <span class=\"failure-highlight\">wrestles with the first person</span>", 
       'G057T000A000R000': "GT prompt: The first person walks forward and raises both hands, <span class=\"action-highlight\">wrapping her/his arms around the second person's shoulders</span>. The second person <span class=\"reaction-highlight\">raises their hands and embraces</span> the first person's waist.<br>TTR thinking result: One person walks up to the other person and gives the second person a <span class=\"failure-highlight\">shoulder massage</span>, and the second person <span class=\"failure-highlight\">leans back</span>",
+
+      "G002T004A024R022": "Two people stand facing each other. The first person <span class=\"action-highlight\">leans</span> towards the second person, and then the second person <span class=\"reaction-highlight\">taps</span> her/him. (<span class=\"failure-highlight\">Mismatched body contact.</span>)",
     };
 
     function getInnerHTML (name, description, isBaseline=false) {
       let parentDir = isBaseline ? '/baselines' : ''
       return `
         <video poster="" autoplay controls muted loop playsinline height="100%">
-            <source src="./static/videos${parentDir}/${name}_pred.mkv" type="video/mp4">
+            <source src="./static/videos${parentDir}/${name}_pred_rotate.mkv" type="video/mp4">
         </video>
         <div>
             <p class="subtitle is-6 has-text-centered description">${description}</p>
@@ -169,6 +172,28 @@
   </div>
 </section>
 
+
+<!-- <section class="section">
+  <div class="container is-max-desktop">
+
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+
+<div id="teaser-cases">
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container">
+        <div id="results-carousel" class="carousel results-carousel"></div>
+      </div>
+    </div>
+  </section>
+</div>
+      </div>
+    </div>
+  </div>
+</section> -->
+
+
 <section class="section">
   <div class="container is-max-desktop">
     <div class="columns is-centered has-text-centered">
@@ -199,6 +224,7 @@
     </div>
   </div>
 </section>
+
 
 <section class="section">
   <div class="container is-max-desktop">
